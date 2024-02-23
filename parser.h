@@ -1,5 +1,5 @@
-#ifndef DOM_PARSER
-#define DOM_PARSER
+#ifndef PDOM_PARSER
+#define PDOM_PARSER
 
 #include <stdint.h>
 
@@ -7,60 +7,59 @@ typedef struct
 {
 	char *name;
 	char *value;
-} Attr;
+} pdom_attr;
 
 typedef struct
 {
 	void **list;
 	int length;
-} List;
+} pdom_list;
 
 typedef struct
 {
-	List *childrens;
-	List *attrs;
+	pdom_list *childrens;
+	pdom_list *attrs;
 	char *tag;
 	size_t isEnd;
 	char *content;
 	int eq;
-	struct Tag *next;
-	struct Tag *prev;
-	struct Tag *parent;
-} Tag;
+	struct pdom_tag *pdom_next;
+	struct pdom_tag *prev;
+	struct pdom_tag *parent;
+} pdom_tag;
 
 typedef struct
 {
-	Tag **tags;
+	pdom_tag **tags;
 	char *html;
 	int i;
-	Tag *current;
+	pdom_tag *current;
 	size_t isXml;
-} Parser;
+} pdom_parser;
 
-size_t isEqual(Parser *p, char *text);
-List *parseAttr(Parser *p);
-size_t parseTag(Parser *p, Tag *tag);
-char *getContentUntil( Parser *p, char until, char *str, char first );
-size_t parseContents(Parser *p, char first, Tag *tag);
-size_t parseComment(Parser *p, Tag *tag);
-char *parseScriptInner(Parser *p);
-char *parseCData(Parser *p);
-size_t next1(Parser *p, Tag *tag);
-size_t next(Parser *p, Tag *tag);
-size_t isEqual(Parser *p, char *text);
-int checkHasEndTag(Tag *tag);
-int getTag(Parser *p, Tag *tag);
-List *parse(Parser *p, Tag *parent);
+size_t pdom_is_equal(pdom_parser *p, char *text);
+pdom_list *pdom_parse_attr(pdom_parser *p);
+size_t pdom_parse_tag(pdom_parser *p, pdom_tag *tag);
+char *pdom_get_content_until( pdom_parser *p, char until, char *str, char first );
+size_t pdom_parse_content(pdom_parser *p, char first, pdom_tag *tag);
+size_t pdom_parse_comment(pdom_parser *p, pdom_tag *tag);
+char *pdom_parse_script(pdom_parser *p);
+char *pdom_parse_cdata(pdom_parser *p);
+size_t pdom_next1(pdom_parser *p, pdom_tag *tag);
+size_t pdom_next(pdom_parser *p, pdom_tag *tag);
+int pdom_check_end_tag(pdom_tag *tag);
+int pdom_get_tag(pdom_parser *p, pdom_tag *tag);
+pdom_list *pdom_parse(pdom_parser *p, pdom_tag *parent);
 
 
-char *hasNoEndTags[17] = {"comment", "php", "empty", "!DOCTYPE", "area", "base", "col", "embed", "param", "source", "track", "meta", "link", "br", "input", "hr", "img"};
+char *hasNoEndpdom_tags[17] = {"comment", "php", "empty", "!DOCTYPE", "area", "base", "col", "embed", "param", "source", "track", "meta", "link", "br", "input", "hr", "img"};
 
-List *parseAttr(Parser *p)
+pdom_list *pdom_parse_attr(pdom_parser *p)
 {
 
-	Attr **attrs = malloc(sizeof(Attr *) * 1000);
+	pdom_attr **attrs = malloc(sizeof(pdom_attr *) * 1000);
 	char *attr = malloc(sizeof(char));
-	char *nowAttr = malloc(sizeof(char));
+	char *nowpdom_attr = malloc(sizeof(char));
 	char c1;
 	int i = 0;
 	size_t size = 0, len = 0;
@@ -82,8 +81,8 @@ List *parseAttr(Parser *p)
 		if (c1 == '=')
 		{
 			attr[len] = '\0';
-			nowAttr = malloc(strlen(attr));
-			nowAttr = attr;
+			nowpdom_attr = malloc(strlen(attr));
+			nowpdom_attr = attr;
 
 			attr = malloc(sizeof(char));
 			len = 0, size = 0;
@@ -127,9 +126,9 @@ List *parseAttr(Parser *p)
 				value[len1++] = c2;
 			}
 			value[len1] = '\0';
-			Attr *pass = malloc(sizeof(Attr));
+			pdom_attr *pass = malloc(sizeof(pdom_attr));
 
-			pass->name = nowAttr;
+			pass->name = nowpdom_attr;
 			pass->value = value;
 
 			attrs[i++] = pass;
@@ -152,16 +151,16 @@ List *parseAttr(Parser *p)
 		attr[len++] = c1;
 	}
 
-	List *list = malloc(sizeof(List));
+	pdom_list *list = malloc(sizeof(pdom_list));
 	list->list = attrs;
 	list->length = i;
 
 	return list;
 }
 
-size_t parseTag(Parser *p, Tag *tag)
+size_t pdom_parse_tag(pdom_parser *p, pdom_tag *tag)
 {
-	if (isEqual(p, "![CDATA["))
+	if (pdom_is_equal(p, "![CDATA["))
 	{
 		p->html += 8;
 		tag->tag = "cdata";
@@ -172,7 +171,7 @@ size_t parseTag(Parser *p, Tag *tag)
 		p->html++;
 
 	char *name = malloc(sizeof(char));
-	List *list = malloc(sizeof(List));
+	pdom_list *list = malloc(sizeof(pdom_list));
 	list->length = 0;
 
 	size_t size = 0, len = 0;
@@ -188,7 +187,7 @@ size_t parseTag(Parser *p, Tag *tag)
 
 		if (c1 == ' ')
 		{
-			list = parseAttr(p);
+			list = pdom_parse_attr(p);
 			break;
 		}
 
@@ -220,7 +219,7 @@ size_t parseTag(Parser *p, Tag *tag)
 	return 1;
 }
 
-char *getContentUntil( Parser *p, char until, char *str, char first ) {
+char *pdom_get_content_until( pdom_parser *p, char until, char *str, char first ) {
 	char *content = malloc(sizeof(char) * 2);
 	size_t size = 0, len = 0;
 
@@ -241,7 +240,7 @@ char *getContentUntil( Parser *p, char until, char *str, char first ) {
 
 		if ( str != 0 ) {
 
-			if( c1 == until && isEqual(p, str) ) {
+			if( c1 == until && pdom_is_equal(p, str) ) {
 				break;
 			}
 		}
@@ -260,11 +259,11 @@ char *getContentUntil( Parser *p, char until, char *str, char first ) {
 	return content;
 }
 
-size_t parseContents(Parser *p, char first, Tag *tag)
+size_t pdom_parse_content(pdom_parser *p, char first, pdom_tag *tag)
 {
 	p->html--;
 
-	char *content = getContentUntil(p, '<', 0, first);
+	char *content = pdom_get_content_until(p, '<', 0, first);
 	
 	p->html--;
 
@@ -273,11 +272,11 @@ size_t parseContents(Parser *p, char first, Tag *tag)
 	return 1;
 }
 
-size_t parseComment(Parser *p, Tag *tag)
+size_t pdom_parse_comment(pdom_parser *p, pdom_tag *tag)
 {
 	p->html += 3;
 
-	char *content = getContentUntil(p,'-', "->", 0);
+	char *content = pdom_get_content_until(p,'-', "->", 0);
 
 	p->html += 2;
 
@@ -286,21 +285,21 @@ size_t parseComment(Parser *p, Tag *tag)
 	return 1;
 }
 
-char *parseScriptInner(Parser *p)
+char *pdom_parse_script(pdom_parser *p)
 {
-	char *content = getContentUntil(p, '<', "/script", 0);
+	char *content = pdom_get_content_until(p, '<', "/script", 0);
 	p->html += 8;
 	return content;
 }
 
-char *parseCData(Parser *p)
+char *pdom_parse_cdata(pdom_parser *p)
 {
-	char *content = getContentUntil(p,']', "]>", 0);
+	char *content = pdom_get_content_until(p,']', "]>", 0);
 	p->html += 2;
 	return content;
 }
 
-size_t next1(Parser *p, Tag *tag)
+size_t pdom_next1(pdom_parser *p, pdom_tag *tag)
 {
 	char c = *p->html++;
 	
@@ -309,35 +308,35 @@ size_t next1(Parser *p, Tag *tag)
 		
 	if (c == '<')
 	{
-		if (isEqual(p, "!--"))
+		if (pdom_is_equal(p, "!--"))
 		{
-			return parseComment(p, tag);
+			return pdom_parse_comment(p, tag);
 		}
 
 		if (*p->html == ' ')
 		{
 			p->html++;
 
-			return parseContents(p, '<', tag);
+			return pdom_parse_content(p, '<', tag);
 		}
 
-		return parseTag(p, tag);
+		return pdom_parse_tag(p, tag);
 	}
 	else
 	{
-		return parseContents(p, 0, tag);
+		return pdom_parse_content(p, 0, tag);
 	}
 }
 
-size_t next(Parser *p, Tag *tag)
+size_t pdom_next(pdom_parser *p, pdom_tag *tag)
 {
-	size_t ret = next1(p, tag);
+	size_t ret = pdom_next1(p, tag);
 	if (ret)
 		p->current = tag;
 	return ret;
 }
 
-size_t isEqual(Parser *p, char *text)
+size_t pdom_is_equal(pdom_parser *p, char *text)
 {
 
 	char *html = p->html;
@@ -358,27 +357,27 @@ size_t isEqual(Parser *p, char *text)
 	return 1;
 }
 
-int checkHasEndTag(Tag *tag)
+int pdom_check_end_tag(pdom_tag *tag)
 {
 	for (int i = 0; i < 17; i++)
 	{
-		if (strcmp(tag->tag, hasNoEndTags[i]) == 0)
+		if (strcmp(tag->tag, hasNoEndpdom_tags[i]) == 0)
 			return 1;
 	}
 	return 0;
 }
 
-int getTag(Parser *p, Tag *tag)
+int pdom_get_tag(pdom_parser *p, pdom_tag *tag)
 {
 
-	int ret = next(p, tag);
+	int ret = pdom_next(p, tag);
 	if ( ! ret )
 		return 0;
 	
 
 	if (strcmp(tag->tag, "cdata") == 0)
 	{
-		tag->content = parseCData(p);
+		tag->content = pdom_parse_cdata(p);
 		return 1;
 	}
 
@@ -395,10 +394,10 @@ int getTag(Parser *p, Tag *tag)
 	}
 
 	if (p->isXml)
-		hasNoEndTags[11] = "";
+		hasNoEndpdom_tags[11] = "";
 
 
-	if (checkHasEndTag(tag))
+	if (pdom_check_end_tag(tag))
 		return 1;
 
 	if (tag->isEnd)
@@ -406,13 +405,13 @@ int getTag(Parser *p, Tag *tag)
 
 	if ( strcmp(tag->tag, "script") ==0 )
 	{
-		char *content = parseScriptInner(p);
+		char *content = pdom_parse_script(p);
 		tag->content = content;
 	}
 	else
 	{
 
-		List *list = parse(p, tag);
+		pdom_list *list = pdom_parse(p, tag);
 		tag->childrens = list;
 	}
 
@@ -421,9 +420,9 @@ int getTag(Parser *p, Tag *tag)
 		return 1;
 	}
 
-	Tag *etag = malloc(sizeof(Tag));
+	pdom_tag *etag = malloc(sizeof(pdom_tag));
 
-	while (next(p, etag))
+	while (pdom_next(p, etag))
 	{
 		if (strcmp(tag->tag, etag->tag) == 0)
 			break;
@@ -432,11 +431,11 @@ int getTag(Parser *p, Tag *tag)
 	return 1;
 }
 
-List *parse(Parser *p, Tag *parent)
+pdom_list *pdom_parse(pdom_parser *p, pdom_tag *parent)
 {
 
-	Tag **tags = malloc(sizeof(Tag *));
-	Tag *stag = malloc(sizeof(Tag));
+	pdom_tag **tags = malloc(sizeof(pdom_tag *));
+	pdom_tag *stag = malloc(sizeof(pdom_tag));
 	int eq = 0;
 	int it = 0;
 
@@ -446,10 +445,10 @@ List *parse(Parser *p, Tag *parent)
 			break;
 		}
 
-		Tag *tag = malloc(sizeof(Tag));
-		List *childs = malloc(sizeof(List));
+		pdom_tag *tag = malloc(sizeof(pdom_tag));
+		pdom_list *childs = malloc(sizeof(pdom_list));
 		childs->length = 0;
-		List *attrs = malloc(sizeof(List));
+		pdom_list *attrs = malloc(sizeof(pdom_list));
 		attrs->length = 0;
 		
 		tag->isEnd = 0;
@@ -457,10 +456,10 @@ List *parse(Parser *p, Tag *parent)
 		tag->attrs = attrs;
 		tag->content = "";
 		tag->eq = 0;
-		tag->next = 0;
+		tag->pdom_next = 0;
 		tag->prev = 0;
 		tag->parent = 0;
-		int st = getTag(p, tag);
+		int st = pdom_get_tag(p, tag);
 	
 
 		if ( !st )
@@ -476,14 +475,14 @@ List *parse(Parser *p, Tag *parent)
 			tag->eq = eq++;
 			tag->prev = stag;
 			tag->parent = parent;
-			stag->next = tag;
+			stag->pdom_next = tag;
 			tags[it++] = tag;
-			tags = realloc(tags, sizeof(Tag *) * (it + 1));
+			tags = realloc(tags, sizeof(pdom_tag *) * (it + 1));
 		}
 
 		stag = tag;
 	}
-	List *list = malloc(sizeof(List));
+	pdom_list *list = malloc(sizeof(pdom_list));
 	list->list = tags;
 	list->length = it;
 

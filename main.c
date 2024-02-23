@@ -5,16 +5,16 @@
 #include <sys/time.h>
 #include "parser.h"
 
-void print_attr(List *list)
+void print_attr(pdom_list *list)
 {
 	for (int i = 0; i < list->length; i++)
 	{
-		Attr *attr = list->list[i];
+		pdom_attr *attr = list->list[i];
 		printf("%s => %s \n", attr->name, attr->value);
 	}
 }
 
-void print_list(List *list)
+void print_list(pdom_list *list)
 {
 
 	if( list->length == 0 )
@@ -22,7 +22,7 @@ void print_list(List *list)
 
 	for (int i = 0; i < list->length; i++)
 	{
-		Tag *tag = list->list[i];
+		pdom_tag *tag = list->list[i];
 		printf("%s => %s\n", tag->tag, tag->content);
 		if( tag->attrs->length > 0 ) {
 			printf("	attrs => {\n");
@@ -71,16 +71,16 @@ int main()
 
 	char *html = getFileContent("fightclub.html");
 	uint64_t time = GetTimeStamp();
-	Parser *p = malloc(sizeof(Parser));
+	pdom_parser *p = malloc(sizeof(pdom_parser));
 	p->html = html;
 	p->i = 0;
-	Tag *document = malloc(sizeof(Tag));
+	pdom_tag *document = malloc(sizeof(pdom_tag));
 	document->tag = "document";
 	p->current = document;
-	document->childrens = parse(p, document);
+	document->childrens = pdom_parse(p, document);
 
 
 	printf("%.6f\n", (float)(GetTimeStamp() - time) / 1000 );
 
-	print_list(document->childrens);
+	//print_list(document->childrens);
 }
