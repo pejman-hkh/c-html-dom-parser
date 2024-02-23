@@ -17,14 +17,15 @@ void print_attr(pdom_list *list)
 void print_list(pdom_list *list)
 {
 
-	if( list->length == 0 )
+	if (list->length == 0)
 		return;
 
 	for (int i = 0; i < list->length; i++)
 	{
 		pdom_tag *tag = list->list[i];
 		printf("%s => %s\n", tag->tag, tag->content);
-		if( tag->attrs->length > 0 ) {
+		if (tag->attrs->length > 0)
+		{
 			printf("	attrs => {\n");
 			print_attr(tag->attrs);
 			printf("	}\n");
@@ -32,16 +33,15 @@ void print_list(pdom_list *list)
 		if (tag->childrens->length > 0)
 		{
 			print_list(tag->childrens);
-
 		}
 	}
 }
 
-
-uint64_t GetTimeStamp() {
-    struct timeval tv;
-    gettimeofday(&tv,NULL);
-    return tv.tv_sec+tv.tv_usec;
+uint64_t GetTimeStamp()
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return tv.tv_sec + tv.tv_usec;
 }
 
 char *getFileContent(char *filename)
@@ -79,8 +79,7 @@ int main()
 	p->current = document;
 	document->childrens = pdom_parse(p, document);
 
+	printf("%.6f\n", (float)(GetTimeStamp() - time) / 1000);
 
-	printf("%.6f\n", (float)(GetTimeStamp() - time) / 1000 );
-
-	//print_list(document->childrens);
+	// print_list(document->childrens);
 }

@@ -40,7 +40,7 @@ typedef struct
 size_t pdom_is_equal(pdom_parser *p, char *text);
 pdom_list *pdom_parse_attr(pdom_parser *p);
 size_t pdom_parse_tag(pdom_parser *p, pdom_tag *tag);
-char *pdom_get_content_until( pdom_parser *p, char until, char *str, char first );
+char *pdom_get_content_until(pdom_parser *p, char until, char *str, char first);
 size_t pdom_parse_content(pdom_parser *p, char first, pdom_tag *tag);
 size_t pdom_parse_comment(pdom_parser *p, pdom_tag *tag);
 char *pdom_parse_script(pdom_parser *p);
@@ -50,7 +50,6 @@ size_t pdom_next(pdom_parser *p, pdom_tag *tag);
 int pdom_check_end_tag(pdom_tag *tag);
 int pdom_get_tag(pdom_parser *p, pdom_tag *tag);
 pdom_list *pdom_parse(pdom_parser *p, pdom_tag *parent);
-
 
 char *hasNoEndpdom_tags[17] = {"comment", "php", "empty", "!DOCTYPE", "area", "base", "col", "embed", "param", "source", "track", "meta", "link", "br", "input", "hr", "img"};
 
@@ -66,9 +65,8 @@ pdom_list *pdom_parse_attr(pdom_parser *p)
 	while (1)
 	{
 		char c1 = *p->html++;
-		if(  c1 == '\0' && c1 != '0' )
+		if (c1 == '\0' && c1 != '0')
 			break;
-		
 
 		if (c1 == ' ')
 		{
@@ -100,13 +98,11 @@ pdom_list *pdom_parse_attr(pdom_parser *p)
 			{
 
 				char c2 = *p->html++;
-				if(  c2 == '\0' && c2 != '0' )
+				if (c2 == '\0' && c2 != '0')
 					break;
-		
 
 				if (!t && c2 == ' ')
 					break;
-				
 
 				if (!t && c2 == '>')
 				{
@@ -141,7 +137,7 @@ pdom_list *pdom_parse_attr(pdom_parser *p)
 
 		if (c1 == '>')
 			break;
-		
+
 		if (len + 1 >= size)
 		{
 			size = size * 2 + 1;
@@ -167,7 +163,7 @@ size_t pdom_parse_tag(pdom_parser *p, pdom_tag *tag)
 		return 1;
 	}
 
-	if ( *(p->html + 1) == '/')
+	if (*(p->html + 1) == '/')
 		p->html++;
 
 	char *name = malloc(sizeof(char));
@@ -178,12 +174,11 @@ size_t pdom_parse_tag(pdom_parser *p, pdom_tag *tag)
 	while (1)
 	{
 		char c1 = *p->html++;
-		if(  c1 == '\0' && c1 != '0' )
+		if (c1 == '\0' && c1 != '0')
 			break;
-		
+
 		if (c1 == '>')
 			break;
-		
 
 		if (c1 == ' ')
 		{
@@ -211,7 +206,7 @@ size_t pdom_parse_tag(pdom_parser *p, pdom_tag *tag)
 		tag->isEnd = 1;
 		tag->tag = name + 1;
 	}
-	if (name[len-1] == '/')
+	if (name[len - 1] == '/')
 	{
 		name[strlen(name) - 1] = '\0';
 		tag->tag = name;
@@ -219,7 +214,8 @@ size_t pdom_parse_tag(pdom_parser *p, pdom_tag *tag)
 	return 1;
 }
 
-char *pdom_get_content_until( pdom_parser *p, char until, char *str, char first ) {
+char *pdom_get_content_until(pdom_parser *p, char until, char *str, char first)
+{
 	char *content = malloc(sizeof(char) * 2);
 	size_t size = 0, len = 0;
 
@@ -234,17 +230,18 @@ char *pdom_get_content_until( pdom_parser *p, char until, char *str, char first 
 	{
 
 		char c1 = *p->html++;
-		if(  c1 == '\0' && c1 != '0' )
+		if (c1 == '\0' && c1 != '0')
 			break;
-		
 
-		if ( str != 0 ) {
+		if (str != 0)
+		{
 
-			if( c1 == until && pdom_is_equal(p, str) ) {
+			if (c1 == until && pdom_is_equal(p, str))
+			{
 				break;
 			}
 		}
-		else if ( c1 == until )
+		else if (c1 == until)
 			break;
 
 		if (len + 1 >= size)
@@ -264,7 +261,7 @@ size_t pdom_parse_content(pdom_parser *p, char first, pdom_tag *tag)
 	p->html--;
 
 	char *content = pdom_get_content_until(p, '<', 0, first);
-	
+
 	p->html--;
 
 	tag->tag = "empty";
@@ -276,7 +273,7 @@ size_t pdom_parse_comment(pdom_parser *p, pdom_tag *tag)
 {
 	p->html += 3;
 
-	char *content = pdom_get_content_until(p,'-', "->", 0);
+	char *content = pdom_get_content_until(p, '-', "->", 0);
 
 	p->html += 2;
 
@@ -294,7 +291,7 @@ char *pdom_parse_script(pdom_parser *p)
 
 char *pdom_parse_cdata(pdom_parser *p)
 {
-	char *content = pdom_get_content_until(p,']', "]>", 0);
+	char *content = pdom_get_content_until(p, ']', "]>", 0);
 	p->html += 2;
 	return content;
 }
@@ -302,10 +299,10 @@ char *pdom_parse_cdata(pdom_parser *p)
 size_t pdom_next1(pdom_parser *p, pdom_tag *tag)
 {
 	char c = *p->html++;
-	
-	if(  c == '\0' && c != '0' )
+
+	if (c == '\0' && c != '0')
 		return 0;
-		
+
 	if (c == '<')
 	{
 		if (pdom_is_equal(p, "!--"))
@@ -371,9 +368,8 @@ int pdom_get_tag(pdom_parser *p, pdom_tag *tag)
 {
 
 	int ret = pdom_next(p, tag);
-	if ( ! ret )
+	if (!ret)
 		return 0;
-	
 
 	if (strcmp(tag->tag, "cdata") == 0)
 	{
@@ -381,8 +377,9 @@ int pdom_get_tag(pdom_parser *p, pdom_tag *tag)
 		return 1;
 	}
 
-	char *substr = malloc(sizeof(char)*5);
-	for( int i = 0; i < 4; i++) {
+	char *substr = malloc(sizeof(char) * 5);
+	for (int i = 0; i < 4; i++)
+	{
 		substr[i] = tag->tag[i];
 	}
 	substr[4] = '\0';
@@ -396,14 +393,13 @@ int pdom_get_tag(pdom_parser *p, pdom_tag *tag)
 	if (p->isXml)
 		hasNoEndpdom_tags[11] = "";
 
-
 	if (pdom_check_end_tag(tag))
 		return 1;
 
 	if (tag->isEnd)
 		return 1;
 
-	if ( strcmp(tag->tag, "script") ==0 )
+	if (strcmp(tag->tag, "script") == 0)
 	{
 		char *content = pdom_parse_script(p);
 		tag->content = content;
@@ -441,7 +437,8 @@ pdom_list *pdom_parse(pdom_parser *p, pdom_tag *parent)
 
 	while (1)
 	{
-		if( p->html[p->i] == '\0' ) {
+		if (p->html[p->i] == '\0')
+		{
 			break;
 		}
 
@@ -450,7 +447,7 @@ pdom_list *pdom_parse(pdom_parser *p, pdom_tag *parent)
 		childs->length = 0;
 		pdom_list *attrs = malloc(sizeof(pdom_list));
 		attrs->length = 0;
-		
+
 		tag->isEnd = 0;
 		tag->childrens = childs;
 		tag->attrs = attrs;
@@ -460,18 +457,16 @@ pdom_list *pdom_parse(pdom_parser *p, pdom_tag *parent)
 		tag->prev = 0;
 		tag->parent = 0;
 		int st = pdom_get_tag(p, tag);
-	
 
-		if ( !st )
+		if (!st)
 			break;
-
 
 		if (tag->isEnd && strcmp(parent->tag, tag->tag) == 0)
 			break;
-		
+
 		if (!tag->isEnd)
 		{
-			
+
 			tag->eq = eq++;
 			tag->prev = stag;
 			tag->parent = parent;
