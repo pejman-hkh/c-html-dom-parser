@@ -56,95 +56,84 @@ char *hasNoEndpdom_tags[17] = {"comment", "php", "empty", "!DOCTYPE", "area", "b
 pdom_list *pdom_parse_attr(pdom_parser *p)
 {
 
-	pdom_attr **attrs = malloc(sizeof(pdom_attr *) * 1000);
-	char *attr = malloc(sizeof(char));
-	char *nowpdom_attr = malloc(sizeof(char));
-	char c1;
+	pdom_attr **attrs = malloc(sizeof(pdom_attr *));
 	int i = 0;
-	size_t size = 0, len = 0;
 	while (1)
 	{
-		char c1 = *p->html++;
-		if (c1 == '\0' && c1 != '0')
-			break;
 
-		if (c1 == ' ')
-		{
-			len = 0, size = 0;
-			attr = malloc(sizeof(char));
-			continue;
+		size_t size1 = 0, len1 = 0;
+		char *name = malloc( sizeof( char ));
+		char is_there_value = 0;
+		while( 1 ) {
+			char c1 = *p->html++;
+			if( c1 == ' ' || c1 == '>' || c1 == '=' || (c1 == '\0' && c1 != '0') ) {
+				if( c1 == '=' )
+					is_there_value = 1;
+				
+				if( c1 == '>' )
+					p->html--;
+				break;
+			}
+
+			if (len1 + 1 >= size1)
+			{
+				size1 = size1 * 2 + 1;
+				name = realloc(name, sizeof(char) * size1);
+			}
+			name[len1++] = c1;
 		}
+		name[len1] = '\0';
 
-		char t = 0;
-		if (c1 == '=')
-		{
-			attr[len] = '\0';
-			nowpdom_attr = malloc(strlen(attr));
-			nowpdom_attr = attr;
 
-			attr = malloc(sizeof(char));
-			len = 0, size = 0;
+		char *value = malloc( sizeof( char ) );
+		size1 = 0, len1 = 0;
+		if( is_there_value ) {
 			char g = *p->html;
+			char t = 0;
 			if (g == '"' || g == '\'')
 			{
 				t = g;
 				p->html++;
 			}
 
-			char *value = malloc(sizeof(char));
-			char c2;
-			size_t size1 = 0, len1 = 0;
-			while (1)
-			{
-
-				char c2 = *p->html++;
-				if (c2 == '\0' && c2 != '0')
+			while( 1 ) {
+				char c1 = *p->html++;
+				if (c1 == t || (c1 == '\0' && c1 != '0'))
 					break;
 
-				if (!t && c2 == ' ')
+				if( !t && c1 == ' ')
 					break;
 
-				if (!t && c2 == '>')
+				if (!t && c1 == '>')
 				{
 					p->html--;
 					break;
 				}
-
-				if (c2 == t)
-					break;
 
 				if (len1 + 1 >= size1)
 				{
 					size1 = size1 * 2 + 1;
 					value = realloc(value, sizeof(char) * size1);
 				}
-
-				value[len1++] = c2;
+	
+				value[len1++] = c1;
 			}
-			value[len1] = '\0';
-			pdom_attr *pass = malloc(sizeof(pdom_attr));
+		}
+		value[len1] = '\0';
 
-			pass->name = nowpdom_attr;
-			pass->value = value;
+		pdom_attr *attr = malloc(sizeof(pdom_attr));
+		if( *name != '/' && *name != ' ' ) {
 
-			attrs[i++] = pass;
-			len = 0, size = 0;
-			attr = malloc(sizeof(char));
+			attr->name = name;
+			attr->value = value;
+
+			attrs[i++] = attr;
+			attrs = realloc( attrs, sizeof(pdom_attr *) * (i+1));
 		}
 
-		if (!t && c1 == '=')
-			continue;
-
-		if (c1 == '>')
+		char c1 = *p->html++;
+		if ( c1 == '>' || (c1 == '\0' && c1 != '0') )
 			break;
-
-		if (len + 1 >= size)
-		{
-			size = size * 2 + 1;
-			attr = realloc(attr, sizeof(char) * size);
-		}
-
-		attr[len++] = c1;
 	}
 
 	pdom_list *list = malloc(sizeof(pdom_list));
@@ -443,15 +432,10 @@ pdom_list *pdom_parse(pdom_parser *p, pdom_tag *parent)
 		}
 
 		pdom_tag *tag = malloc(sizeof(pdom_tag));
-		pdom_list *childs = malloc(sizeof(pdom_list));
-		childs->length = 0;
-		pdom_list *attrs = malloc(sizeof(pdom_list));
-		attrs->length = 0;
-
 		tag->isEnd = 0;
-		tag->childrens = childs;
-		tag->attrs = attrs;
-		tag->content = "";
+		tag->childrens = 0;
+		tag->attrs = 0;
+		tag->content = 0;
 		tag->eq = 0;
 		tag->pdom_next = 0;
 		tag->prev = 0;
@@ -484,4 +468,39 @@ pdom_list *pdom_parse(pdom_parser *p, pdom_tag *parent)
 	return list;
 }
 
+void pdom_free( pdom_tag *tag ) {
+	pdom_list *list = tag->childrens;
+	for (int i = 0; i < list->length; i++)
+	{
+		pdom_tag *tag = (pdom_tag *)list->list[i];
+		
+		if( tag->content) {
+			free(tag->content);
+		}
+	
+		if (tag->attrs && tag->attrs->length > 0)
+		{
+		
+			for (int j = 0; j < tag->attrs->length; j++)
+			{
+				pdom_attr *attr = tag->attrs->list[j];
+				free(attr->name);
+				free(attr->value);
+				free(attr);
+			}
+
+			free(tag->attrs->list);
+			free(tag->attrs);
+		}
+
+		if (tag->childrens && tag->childrens->length > 0)
+		{
+			pdom_free(tag);
+		}
+
+		free(tag);
+	}
+	free( list->list );
+	free( list );
+}
 #endif
