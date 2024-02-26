@@ -122,7 +122,7 @@ pdom_list *pdom_parse_attr(pdom_parser *p)
 		value[len1] = '\0';
 
 		pdom_attr *attr = malloc(sizeof(pdom_attr));
-		if( *name != '/' && *name != ' ' ) {
+		if( *name != '/' && *name != '\0' && *name != ' ' ) {
 
 			attr->name = name;
 			attr->value = value;
